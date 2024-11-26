@@ -1,69 +1,80 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+import time
+
+# Configure Selenium WebDriver
+def configure_driver():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Run in headless mode for Streamlit Cloud compatibility
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    service = Service("/usr/bin/chromedriver")  # Path to ChromeDriver (adjust if needed)
+    return webdriver.Chrome(service=service, options=chrome_options)
 
 # Function to fetch properties for sale
 def fetch_properties_for_sale(location, min_price, max_price, bedrooms):
-    # Construct the URL (replace POSTCODE with location if needed)
-    url = f"https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=POSTCODE&minPrice={min_price}&maxPrice={max_price}&minBedrooms={bedrooms}&radius=0.5"
-    
-    # Send GET request
-    response = requests.get(url)
-    if response.status_code != 200:
-        return []
-    
-    # Parse HTML content
-    soup = BeautifulSoup(response.text, 'html.parser')
+    driver = configure_driver()
+    url = f"https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=POSTCODE%5E{location}&minPrice={min_price}&maxPrice={max_price}&minBedrooms={bedrooms}&radius=0.5"
+    driver.get(url)
+    time.sleep(5)  # Allow time for the page to load
+
     properties = []
-    
-    # Extract property details
-    for listing in soup.find_all('div', class_='propertyCard'):
-        try:
-            title = listing.find('h2', class_='propertyCard-title').text.strip()
-            description = listing.find('span', class_='propertyCard-description').text.strip()
-            price = listing.find('div', class_='propertyCard-priceValue').text.strip()
-            link = "https://www.rightmove.co.uk" + listing.find('a', class_='propertyCard-link')['href']
-            properties.append({
-                'title': title,
-                'description': description,
-                'price': price,
-                'link': link
-            })
-        except AttributeError:
-            continue
-    
+    try:
+        listings = driver.find_elements(By.CLASS_NAME, "propertyCard")
+        for listing in listings:
+            try:
+                title = listing.find_element(By.CLASS_NAME, "propertyCard-title").text.strip()
+                description = listing.find_element(By.CLASS_NAME, "propertyCard-description").text.strip()
+                price = listing.find_element(By.CLASS_NAME, "propertyCard-priceValue").text.strip()
+                link = listing.find_element(By.TAG_NAME, "a").get_attribute("href")
+                properties.append({
+                    'title': title,
+                    'description': description,
+                    'price': price,
+                    'link': link
+                })
+            except Exception:
+                continue
+    except Exception as e:
+        st.error(f"Error fetching properties: {e}")
+    finally:
+        driver.quit()
+
     return properties
 
 # Function to fetch sold house prices
 def fetch_sold_prices(location):
-    # Construct the URL (replace POSTCODE with location if needed)
+    driver = configure_driver()
     url = f"https://www.rightmove.co.uk/house-prices/{location}.html"
-    
-    # Send GET request
-    response = requests.get(url)
-    if response.status_code != 200:
-        return []
-    
-    # Parse HTML content
-    soup = BeautifulSoup(response.text, 'html.parser')
+    driver.get(url)
+    time.sleep(5)  # Allow time for the page to load
+
     sold_prices = []
-    
-    # Extract sold property details
-    for listing in soup.find_all('div', class_='soldPropertyCard'):
-        try:
-            title = listing.find('h2', class_='soldPropertyCard-title').text.strip()
-            description = listing.find('span', class_='soldPropertyCard-description').text.strip()
-            price = listing.find('div', class_='soldPropertyCard-priceValue').text.strip()
-            link = "https://www.rightmove.co.uk" + listing.find('a', class_='soldPropertyCard-link')['href']
-            sold_prices.append({
-                'title': title,
-                'description': description,
-                'price': price,
-                'link': link
-            })
-        except AttributeError:
-            continue
-    
+    try:
+        listings = driver.find_elements(By.CLASS_NAME, "soldPropertyCard")
+        for listing in listings:
+            try:
+                title = listing.find_element(By.CLASS_NAME, "soldPropertyCard-title").text.strip()
+                description = listing.find_element(By.CLASS_NAME, "soldPropertyCard-description").text.strip()
+                price = listing.find_element(By.CLASS_NAME, "soldPropertyCard-priceValue").text.strip()
+                link = listing.find_element(By.TAG_NAME, "a").get_attribute("href")
+                sold_prices.append({
+                    'title': title,
+                    'description': description,
+                    'price': price,
+                    'link': link
+                })
+            except Exception:
+                continue
+    except Exception as e:
+        st.error(f"Error fetching sold prices: {e}")
+    finally:
+        driver.quit()
+
     return sold_prices
 
 # Streamlit app layout
