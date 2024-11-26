@@ -3,36 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     <title>Property Search</title>
-    <link rel="stylesheet" href="path/to/your/styles.css">
 </head>
 <body>
     <div class="search-container">
         <h1>Property Search</h1>
         <form id="property-search-form">
             <div class="form-group">
-                <input type="text" id="search-location" placeholder="Location" required />
+                <input type="text" id="search-location" placeholder="Location" required>
             </div>
             <div class="form-group">
-                <input type="number" id="min-price" placeholder="Min Price" />
-                <input type="number" id="max-price" placeholder="Max Price" />
+                <input type="number" id="min-price" placeholder="Min Price (£)" required>
+                <input type="number" id="max-price" placeholder="Max Price (£)" required>
             </div>
             <div class="form-group">
-                <select id="bedrooms">
-                    <option value="">Any Bedrooms</option>
-                    <option value="1">1 Bedroom</option>
-                    <option value="2">2 Bedrooms</option>
-                    <option value="3">3 Bedrooms</option>
-                    <option value="4">4 Bedrooms</option>
-                    <option value="5">5+ Bedrooms</option>
+                <select id="bedrooms" required>
+                    <option value="">Bedrooms</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5+">5+</option>
                 </select>
             </div>
             <button type="submit">Search</button>
         </form>
-        <div class="results-container">
-            <!-- Results will be dynamically populated here -->
-        </div>
+
+        <div class="results-container"></div>
     </div>
-    <script src="path/to/your/file.js"></script>
+
+    <script src="file.js"></script>
 </body>
 </html>
