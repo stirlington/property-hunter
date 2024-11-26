@@ -1,72 +1,22 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
 
-# Function to fetch properties for sale
-def fetch_properties_for_sale(location, min_price, max_price, bedrooms):
-    # Replace 'POSTCODE' with the actual location identifier (e.g., RH1 for Redhill)
-    url = f"https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=POSTCODE%5E{location}&minPrice={min_price}&maxPrice={max_price}&minBedrooms={bedrooms}&radius=0.5"
-    
-    # Send a GET request to the Rightmove search page
-    response = requests.get(url)
-    if response.status_code != 200:
-        st.error("Failed to fetch properties for sale. Please check your inputs or try again later.")
-        return []
+# Function to construct Rightmove search URL for properties for sale
+def generate_for_sale_url(location, min_price, max_price, bedrooms):
+    base_url = "https://www.rightmove.co.uk/property-for-sale/find.html"
+    location_param = f"locationIdentifier=OUTCODE%5E{location}"
+    min_price_param = f"minPrice={min_price}"
+    max_price_param = f"maxPrice={max_price}"
+    bedrooms_param = f"minBedrooms={bedrooms}" if bedrooms != "Any" else ""
+    radius_param = "radius=0.5"
 
-    # Parse the HTML content using BeautifulSoup
-    soup = BeautifulSoup(response.text, 'html.parser')
-    properties = []
+    # Combine parameters into a valid URL
+    params = "&".join(filter(None, [location_param, min_price_param, max_price_param, bedrooms_param, radius_param]))
+    return f"{base_url}?{params}"
 
-    # Extract property listings (adjust selectors based on Rightmove's HTML structure)
-    for listing in soup.find_all('div', class_='propertyCard'):
-        try:
-            title = listing.find('h2', class_='propertyCard-title').text.strip()
-            description = listing.find('span', class_='propertyCard-description').text.strip()
-            price = listing.find('div', class_='propertyCard-priceValue').text.strip()
-            link = "https://www.rightmove.co.uk" + listing.find('a', class_='propertyCard-link')['href']
-            properties.append({
-                'title': title,
-                'description': description,
-                'price': price,
-                'link': link
-            })
-        except AttributeError:
-            continue
-
-    return properties
-
-# Function to fetch sold house prices
-def fetch_sold_prices(location):
-    # Replace 'POSTCODE' with the actual location identifier (e.g., RH1 for Redhill)
-    url = f"https://www.rightmove.co.uk/house-prices/{location}.html"
-    
-    # Send a GET request to the Rightmove sold prices page
-    response = requests.get(url)
-    if response.status_code != 200:
-        st.error("Failed to fetch sold house prices. Please check your inputs or try again later.")
-        return []
-
-    # Parse the HTML content using BeautifulSoup
-    soup = BeautifulSoup(response.text, 'html.parser')
-    sold_prices = []
-
-    # Extract sold property listings (adjust selectors based on Rightmove's HTML structure)
-    for listing in soup.find_all('div', class_='soldPropertyCard'):
-        try:
-            title = listing.find('h2', class_='soldPropertyCard-title').text.strip()
-            description = listing.find('span', class_='soldPropertyCard-description').text.strip()
-            price = listing.find('div', class_='soldPropertyCard-priceValue').text.strip()
-            link = "https://www.rightmove.co.uk" + listing.find('a', class_='soldPropertyCard-link')['href']
-            sold_prices.append({
-                'title': title,
-                'description': description,
-                'price': price,
-                'link': link
-            })
-        except AttributeError:
-            continue
-
-    return sold_prices
+# Function to construct Rightmove search URL for sold house prices
+def generate_sold_prices_url(location):
+    base_url = "https://www.rightmove.co.uk/house-prices/"
+    return f"{base_url}{location}.html"
 
 # Streamlit app layout
 st.set_page_config(page_title="Property Search", layout="wide")
@@ -82,28 +32,19 @@ with st.sidebar:
 
 # Search button functionality
 if st.button("Search"):
-    with st.spinner("Fetching properties..."):
-        # Fetch properties for sale and sold prices
-        properties_for_sale = fetch_properties_for_sale(location, min_price, max_price, bedrooms)
-        sold_prices = fetch_sold_prices(location)
+    with st.spinner("Generating search URLs..."):
+        # Generate URLs
+        for_sale_url = generate_for_sale_url(location, min_price, max_price, bedrooms)
+        sold_prices_url = generate_sold_prices_url(location)
 
         # Display results
-        st.subheader("Properties For Sale")
-        if properties_for_sale:
-            for property in properties_for_sale:
-                st.markdown(f"### [{property['title']}]({property['link']})")
-                st.write(f"**Description**: {property['description']}")
-                st.write(f"**Price**: {property['price']}")
-                st.write("---")
-        else:
-            st.write("No properties found.")
+        st.subheader("Search Results")
+        st.markdown(f"### [View Properties For Sale](<{for_sale_url}>)")
+        st.write(f"Search for properties in {location} with the following criteria:")
+        st.write(f"- **Min Price**: £{min_price:,}")
+        st.write(f"- **Max Price**: £{max_price:,}")
+        st.write(f"- **Bedrooms**: {bedrooms}")
+        st.write("---")
 
-        st.subheader("Sold Prices")
-        if sold_prices:
-            for sold_property in sold_prices:
-                st.markdown(f"### [{sold_property['title']}]({sold_property['link']})")
-                st.write(f"**Description**: {sold_property['description']}")
-                st.write(f"**Sold Price**: {sold_property['price']}")
-                st.write("---")
-        else:
-            st.write("No sold prices found.")
+        st.markdown(f"### [View Sold House Prices](<{sold_prices_url}>)")
+        st.write(f"View historical sold house prices in {location}.")
