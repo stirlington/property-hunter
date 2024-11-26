@@ -1,28 +1,31 @@
+/* General Styling */
 body {
-    font-family: Arial, sans-serif;
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
 }
 
-.search-container {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+/* Sidebar Styling */
+.sidebar .block-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.form-group {
-    margin-bottom: 15px;
+/* Results Container */
+.results-container {
+  margin-top: 20px;
 }
 
-input[type='text'], input[type='number'], select {
-    width: calc(50% - 10px);
-    padding: 10px;
+.property-item {
+  border-bottom: 1px solid #ddd;
+  padding: 15px;
 }
 
-button {
-    padding: 10px;
+.property-item h3 {
+  color: #0073e6;
 }
 
-.results-container .property-item {
-    margin-bottom: 15px;
+.property-item p {
+  margin: 5px 0;
 }
