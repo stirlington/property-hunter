@@ -4,13 +4,15 @@ from bs4 import BeautifulSoup
 
 def fetch_properties(location, min_price, max_price, bedrooms):
     # Construct the URL for Rightmove search
-    url = f"https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=POSTCODE&minPrice={min_price}&maxPrice={max_price}&bedrooms={bedrooms}&radius=0.5"
+    location_identifier = location.replace(" ", "+")  # Format the location for the URL
+    url = f"https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier={location_identifier}&minPrice={min_price}&maxPrice={max_price}&bedrooms={bedrooms}&radius=0.5"
     
     # Send a GET request to the Rightmove search page
     response = requests.get(url)
     
     # Check if the request was successful
     if response.status_code != 200:
+        st.error("Failed to retrieve data from Rightmove.")
         return []
 
     # Parse the HTML content
