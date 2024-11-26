@@ -52,11 +52,15 @@ if st.button("Search"):
         # Generate Rightmove URL for cheapest properties
         for_sale_url = generate_for_sale_url(location, min_price, max_price, bedrooms)
 
+        # Display generated URL
+        st.subheader("Search Link")
+        st.markdown(f"### [View Cheapest Properties on Rightmove](<{for_sale_url}>)")
+
         # Example data for demonstration purposes (replace with live data fetching logic)
         properties_for_sale = [
-            {"title": "2-Bed Flat", "price": "£300,000", "url": "https://example.com/property1"},
-            {"title": "3-Bed House", "price": "£250,000", "url": "https://example.com/property2"},
-            {"title": "Studio Apartment", "price": "£150,000", "url": "https://example.com/property3"},
+            {"title": "2-Bed Flat", "price": "£300,000", "url": f"{for_sale_url}&propertyId=12345"},
+            {"title": "3-Bed House", "price": "£250,000", "url": f"{for_sale_url}&propertyId=67890"},
+            {"title": "Studio Apartment", "price": "£150,000", "url": f"{for_sale_url}&propertyId=54321"},
         ]
 
         # Calculate ARV and profit margins
@@ -71,10 +75,6 @@ if st.button("Search"):
                 "profit": f"£{profit:,}" if profit else "N/A",
                 "url": property["url"]
             })
-
-        # Display generated URL
-        st.subheader("Search Link")
-        st.markdown(f"### [View Cheapest Properties on Rightmove](<{for_sale_url}>)")
 
         # Display investment opportunities
         st.subheader("Investment Opportunities")
