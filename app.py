@@ -1,55 +1,46 @@
-import streamlit as st
-import requests
-from bs4 import BeautifulSoup
+from flask import Flask, request, jsonify
 
-def fetch_properties(location, min_price, max_price, bedrooms):
-    # Construct the URL for Rightmove search
-    location_identifier = location.replace(" ", "+")  # Format the location for the URL
-    url = f"https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier={location_identifier}&minPrice={min_price}&maxPrice={max_price}&bedrooms={bedrooms}&radius=0.5"
-    
-    # Send a GET request to the Rightmove search page
-    response = requests.get(url)
-    
-    # Check if the request was successful
-    if response.status_code != 200:
-        st.error("Failed to retrieve data from Rightmove.")
-        return []
+app = Flask(__name__)
 
-    # Parse the HTML content
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    # Find property listings (this will depend on the actual HTML structure)
-    properties = []
-    for listing in soup.find_all('div', class_='propertyCard'):
-        title = listing.find('h2', class_='propertyCard-title').text.strip()
-        description = listing.find('div', class_='propertyCard-description').text.strip()
-        price = listing.find('div', class_='propertyCard-priceValue').text.strip()
-        
-        properties.append({
-            'title': title,
-            'description': description,
-            'price': price
-        })
-    
-    return properties
+# Fetch current properties (Placeholder logic)
+def fetch_current_properties(location, min_price, max_price, bedrooms):
+    return [
+        {"title": "Current Property 1", "description": "Spacious 2-bed flat", "price": 300000, "rental_income": 12000},
+        {"title": "Current Property 2", "description": "3-bed house with garden", "price": 250000, "rental_income": 15000},
+    ]
 
-# Streamlit app layout
-st.title("Property Search")
+# Fetch sold prices (Placeholder logic)
+def fetch_sold_prices(location, min_price, max_price, bedrooms):
+    return [
+        {"title": "Sold Property 1", "description": "Recently sold 2-bed flat", "price": 280000},
+        {"title": "Sold Property 2", "description": "Recently sold 3-bed house", "price": 240000},
+    ]
 
-# Input fields for search criteria
-location = st.text_input("Location")
-min_price = st.number_input("Min Price", min_value=0, value=0)
-max_price = st.number_input("Max Price", min_value=0, value=1000000)
-bedrooms = st.selectbox("Bedrooms", options=["Any", "1", "2", "3", "4", "5+"])
+# Calculate gross yield
+def calculate_yield(price, rental_income):
+    return round((rental_income / price) * 100, 2)
 
-# Search button
-if st.button("Search"):
-    # Fetch properties based on the criteria
-    properties = fetch_properties(location, min_price, max_price, bedrooms)
+@app.route('/search-properties', methods=['GET'])
+def search_properties():
+    location = request.args.get('location')
+    min_price = int(request.args.get('min_price', 0))
+    max_price = int(request.args.get('max_price', 1000000))
+    bedrooms = request.args.get('bedrooms')
 
-    # Display properties
-    if properties:
-        for property in properties:
-            st.write(f"**{property['title']}**: {property['description']} - {property['price']}")
-    else:
-        st.write("No properties found.")
+    # Fetch properties
+    current_properties = fetch_current_properties(location, min_price, max_price, bedrooms)
+    sold_prices = fetch_sold_prices(location, min_price, max_price, bedrooms)
+
+    # Add yield calculation for current properties
+    for property in current_properties:
+        property['yield'] = calculate_yield(property['price'], property['rental_income'])
+
+    # Combine results
+    results = {
+        "current_properties": current_properties,
+        "sold_prices": sold_prices,
+    }
+    return jsonify(results)
+
+if __name__ == '__main__':
+    app.run(debug=True)
