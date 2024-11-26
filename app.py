@@ -18,9 +18,19 @@ def generate_sold_prices_url(location):
     base_url = "https://www.rightmove.co.uk/house-prices/"
     return f"{base_url}{location}.html"
 
+# Function to calculate gross rental yield
+def calculate_yield(current_price, sold_price):
+    try:
+        current_price = float(current_price.replace("£", "").replace(",", ""))
+        sold_price = float(sold_price.replace("£", "").replace(",", ""))
+        yield_percentage = ((current_price - sold_price) / sold_price) * 100
+        return round(yield_percentage, 2)
+    except ValueError:
+        return None
+
 # Streamlit app layout
-st.set_page_config(page_title="Property Search", layout="wide")
-st.title("🏠 Property Search")
+st.set_page_config(page_title="Property Yield Calculator", layout="wide")
+st.title("🏠 Property Yield Calculator")
 
 # Input fields for search criteria
 with st.sidebar:
@@ -30,21 +40,53 @@ with st.sidebar:
     max_price = st.number_input("Max Price (£)", min_value=0, value=500000, step=5000)
     bedrooms = st.selectbox("Bedrooms", options=["Any", "1", "2", "3", "4", "5+"])
 
+# Example data for demonstration purposes (replace with live data fetching logic)
+current_properties = [
+    {"title": "2-Bed Flat", "price": "£300,000", "url": "https://example.com/property1"},
+    {"title": "3-Bed House", "price": "£250,000", "url": "https://example.com/property2"},
+]
+sold_properties = [
+    {"title": "Sold 2-Bed Flat", "price": "£200,000"},
+    {"title": "Sold 3-Bed House", "price": "£180,000"},
+]
+
 # Search button functionality
 if st.button("Search"):
-    with st.spinner("Generating search URLs..."):
+    with st.spinner("Generating results..."):
         # Generate URLs
         for_sale_url = generate_for_sale_url(location, min_price, max_price, bedrooms)
         sold_prices_url = generate_sold_prices_url(location)
 
-        # Display results
-        st.subheader("Search Results")
+        # Display generated URLs
+        st.subheader("Generated Search Links")
         st.markdown(f"### [View Properties For Sale](<{for_sale_url}>)")
-        st.write(f"Search for properties in {location} with the following criteria:")
-        st.write(f"- **Min Price**: £{min_price:,}")
-        st.write(f"- **Max Price**: £{max_price:,}")
-        st.write(f"- **Bedrooms**: {bedrooms}")
-        st.write("---")
-
         st.markdown(f"### [View Sold House Prices](<{sold_prices_url}>)")
-        st.write(f"View historical sold house prices in {location}.")
+
+        # Calculate yields based on example data
+        st.subheader("Investment Opportunities")
+        opportunities = []
+        for current in current_properties:
+            for sold in sold_properties:
+                yield_percentage = calculate_yield(current["price"], sold["price"])
+                if yield_percentage is not None:
+                    opportunities.append({
+                        "title": current["title"],
+                        "current_price": current["price"],
+                        "sold_price": sold["price"],
+                        "yield": yield_percentage,
+                        "url": current["url"]
+                    })
+
+        # Sort opportunities by yield (highest first)
+        opportunities.sort(key=lambda x: x["yield"], reverse=True)
+
+        # Display opportunities
+        if opportunities:
+            for opp in opportunities:
+                st.markdown(f"### [{opp['title']}]({opp['url']})")
+                st.write(f"**Current Price**: {opp['current_price']}")
+                st.write(f"**Sold Price**: {opp['sold_price']}")
+                st.write(f"**Yield**: {opp['yield']}%")
+                st.write("---")
+        else:
+            st.write("No investment opportunities found.")
